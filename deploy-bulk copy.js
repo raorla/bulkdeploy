@@ -15,10 +15,7 @@ const OUTPUT_FILE = 'deployed_apps.json';
 const CHAIN_CONFIG = {
   chainId: '134',
   host: 'https://bellecour.iex.ec',
-  sms: 'https://sms.staging.iex.ec',
-  iexecGateway: 'https://api.market.stagingv8.iex.ec',
-  ipfsGateway: 'https://ipfs-gateway.stagingv8.iex.ec',
-  resultProxy: 'https://result.stagingv8.iex.ec'
+  sms: 'https://sms.scone-prod.v8-bellecour.iex.ec',
 };
 
 // Template d'application

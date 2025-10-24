@@ -1,7 +1,18 @@
 {
-  "default": "bellecour",
+  "default": "staging",
   "chains": {
     "mainnet": {},
-    "bellecour": {}
+    "bellecour": {
+      "sms": { "scone": "https://sms.staging.iex.ec" }
+    },
+    "arbitrum-mainnet": {},
+    "staging": {
+      "host": "https://bellecour.iex.ec",
+      "iexecGateway": "https://api.market.stagingv8.iex.ec",
+      "ipfsGateway": "https://ipfs-gateway.stagingv8.iex.ec",
+      "sms": "https://sms.staging.iex.ec",
+      "resultProxy": "https://result.stagingv8.iex.ec",
+      "id": "134"
+    }
   }
 }

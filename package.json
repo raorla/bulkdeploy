@@ -1,0 +1,25 @@
+{
+  "name": "iexec-bulk-deployment",
+  "version": "1.0.0",
+  "description": "Déploiement en masse d'apps et datasets iExec avec le SDK",
+  "type": "module",
+  "main": "deploy-bulk.js",
+  "scripts": {
+    "deploy": "node deploy-bulk.js",
+    "deploy:5": "node deploy-bulk.js 5",
+    "deploy:10": "node deploy-bulk.js 10",
+    "deploy:20": "node deploy-bulk.js 20"
+  },
+  "keywords": [
+    "iexec",
+    "bulk",
+    "deployment"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "iexec": "^8.20.0",
+    "kubo-rpc-client": "^6.0.2",
+    "ethers": "^5.7.2"
+  }
+}

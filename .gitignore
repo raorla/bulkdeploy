@@ -1,0 +1,16 @@
+# Résultats de déploiement (contient des clés privées)
+deployed_apps.json
+
+# Dépendances
+node_modules/
+package-lock.json
+
+# Fichiers temporaires
+*.log
+*.tmp
+.DS_Store
+
+# Fichiers iExec sensibles
+wallet.json
+.secrets/
+deployed.json

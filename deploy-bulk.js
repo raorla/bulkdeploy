@@ -198,6 +198,25 @@ async function pushDatasetSecret(iexec, datasetAddress, encryptionKey) {
   return pushed;
 }
 
+// Fonction pour push un requester secret
+async function pushRequesterSecret(iexec, secretName, secretValue) {
+  console.log(`  🔐 Push du requester secret "${secretName}"...`);
+  
+  // Afficher la configuration SMS utilisée
+  const smsUrl = await iexec.config.resolveSmsURL();
+  console.log(`     SMS URL: ${smsUrl}`);
+  
+  const { isPushed } = await iexec.secrets.pushRequesterSecret(secretName, secretValue);
+  
+  if (isPushed) {
+    console.log(`  ✅ Requester secret "${secretName}" poussé avec succès`);
+  } else {
+    console.log(`  ⚠️  Requester secret "${secretName}" existe déjà ou n'a pas pu être poussé`);
+  }
+  
+  return isPushed;
+}
+
 // Fonction principale pour déployer un ensemble complet
 async function deployComplete(deploymentNumber) {
   console.log(`\n${'='.repeat(70)}`);
@@ -266,7 +285,23 @@ async function deployComplete(deploymentNumber) {
     console.log(`\n6️⃣  Configuration des secrets du dataset...`);
     await pushDatasetSecret(iexec, datasetDeployment.address, encryptionKey);
     
-    // 8. Résumé
+    // 8. Push requester secrets (exemples)
+    console.log(`\n7️⃣  Configuration des requester secrets...`);
+    const requesterSecrets = [
+      { name: 'my-api-key', value: 'demo-api-key-12345' },
+      { name: 'my-password', value: 'demo-password-67890' }
+    ];
+    
+    for (const secret of requesterSecrets) {
+      try {
+        await pushRequesterSecret(iexec, secret.name, secret.value);
+      } catch (error) {
+        // Le secret existe peut-être déjà, on continue
+        console.log(`  ⚠️  Note: ${error.message}`);
+      }
+    }
+    
+    // 9. Résumé
     console.log(`\n✅ DÉPLOIEMENT #${deploymentNumber} TERMINÉ !`);
     console.log(`  App: ${appDeployment.address}`);
     console.log(`  Dataset: ${datasetDeployment.address}`);

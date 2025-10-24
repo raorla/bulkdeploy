@@ -11,20 +11,6 @@ Dépendances :
 - `kubo-rpc-client`: Client IPFS pour uploads réels
 - `ethers`: Pour la création de wallets
 
-## 📋 Fonctionnalités
-
-Le script effectue pour chaque déploiement :
-
-1. ✅ **Création de wallet** avec clé privée et mnémonique
-2. ✅ **Déploiement d'app TEE** (SCONE framework v5.9)
-3. ✅ **Push app secret** vers SMS staging
-4. ✅ **Chiffrement dataset** avec clé unique AES-256-CBC
-5. ✅ **Upload IPFS réel** sur staging gateway
-6. ✅ **Vérification IPFS** (téléchargement et comparaison)
-7. ✅ **Déploiement dataset** avec CID réel
-8. ✅ **Push dataset secret** (clé de chiffrement)
-9. ✅ **Push requester secrets** (2 secrets démo)
-10. ✅ **Export JSON** avec toutes les données
 
 ### Secrets configurés automatiquement
 

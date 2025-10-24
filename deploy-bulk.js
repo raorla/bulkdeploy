@@ -8,6 +8,7 @@
 import { IExec, utils } from 'iexec';
 import { Wallet } from 'ethers';
 import { writeFile } from 'fs/promises';
+import { create } from 'kubo-rpc-client';
 
 // Configuration
 const NUM_DEPLOYMENTS = parseInt(process.argv[2]) || 10;
@@ -66,6 +67,10 @@ async function deployApp(iexec, appName, ownerAddress) {
 async function pushAppSecret(iexec, appAddress, secretValue) {
   console.log(`  🔐 Push du secret de l'app...`);
   
+  // Afficher la configuration SMS utilisée
+  const smsUrl = await iexec.config.resolveSmsURL();
+  console.log(`     SMS URL: ${smsUrl}`);
+  
   const pushed = await iexec.app.pushAppSecret(appAddress, secretValue);
   
   if (pushed) {
@@ -92,22 +97,69 @@ async function encryptAndUploadDataset(iexec, dataContent, datasetName) {
   const checksum = await iexec.dataset.computeEncryptedFileChecksum(encryptedBuffer);
   console.log(`  ✅ Fichier chiffré (checksum: ${checksum.substring(0, 10)}...)`);
   
-  // Note: Pour un vrai déploiement, vous devrez uploader le fichier chiffré
-  // vers IPFS ou GitHub et fournir le vrai multiaddr
-  // Pour l'instant, on utilise un placeholder
-  const multiaddr = `/ipfs/QmTJ41EuPEwiPTGrYVPbXgMGvmgzsRYWWMmw6krVDN94nh`; // placeholder
-  const publicUrl = `https://ipfs.iex.ec${multiaddr}`;
+  // Upload sur IPFS
+  console.log(`  ☁️  Upload sur IPFS...`);
   
-  console.log(`  ℹ️  NOTE: Dataset chiffré localement, upload IPFS désactivé pour ce test`);
-  console.log(`  ℹ️  Dans un vrai déploiement, uploadez le fichier vers IPFS/GitHub`);
-  
-  return {
-    multiaddr,
-    checksum,
-    encryptionKey,
-    publicUrl,
-    encryptedData: encryptedBuffer // On garde les données pour référence
-  };
+  try {
+    // Utiliser le gateway IPFS de staging
+    const ipfs = create({
+      host: 'ipfs-gateway.stagingv8.iex.ec',
+      port: 443,
+      protocol: 'https'
+    });
+    
+    console.log(`  📤 Connexion à ipfs-gateway.stagingv8.iex.ec...`);
+    const uploadResult = await ipfs.add(encryptedBuffer);
+    const cid = uploadResult.cid.toString();
+    const multiaddr = `/ipfs/${cid}`;
+    const publicUrl = `https://ipfs-gateway.stagingv8.iex.ec/ipfs/${cid}`;
+    
+    console.log(`  ✅ Upload réussi !`);
+    console.log(`     CID: ${cid}`);
+    console.log(`     URL: ${publicUrl.substring(0, 60)}...`);
+    
+    // Vérifier que le fichier est accessible
+    console.log(`  🔍 Vérification de l'accessibilité...`);
+    const response = await fetch(publicUrl);
+    if (!response.ok) {
+      throw new Error(`Fichier non accessible: HTTP ${response.status}`);
+    }
+    
+    // Vérifier que le contenu correspond
+    const downloadedBuffer = Buffer.from(await response.arrayBuffer());
+    if (!downloadedBuffer.equals(encryptedBuffer)) {
+      throw new Error('Le contenu téléchargé ne correspond pas au fichier uploadé');
+    }
+    
+    console.log(`  ✅ Fichier vérifié et accessible sur IPFS !`);
+    
+    return {
+      multiaddr,
+      checksum,
+      encryptionKey,
+      publicUrl,
+      cid,
+      encryptedData: encryptedBuffer
+    };
+    
+  } catch (ipfsError) {
+    console.error(`  ❌ Erreur IPFS:`, ipfsError.message);
+    console.log(`  ⚠️  Utilisation d'un placeholder à la place`);
+    
+    // Fallback sur un placeholder
+    const multiaddr = `/ipfs/QmTJ41EuPEwiPTGrYVPbXgMGvmgzsRYWWMmw6krVDN94nh`;
+    const publicUrl = `https://ipfs-gateway.stagingv8.iex.ec${multiaddr}`;
+    
+    return {
+      multiaddr,
+      checksum,
+      encryptionKey,
+      publicUrl,
+      cid: 'placeholder',
+      encryptedData: encryptedBuffer,
+      ipfsError: ipfsError.message
+    };
+  }
 }
 
 // Fonction pour déployer un dataset
@@ -130,6 +182,10 @@ async function deployDataset(iexec, datasetName, multiaddr, checksum, ownerAddre
 // Fonction pour push le secret du dataset
 async function pushDatasetSecret(iexec, datasetAddress, encryptionKey) {
   console.log(`  🔐 Push du secret du dataset...`);
+  
+  // Afficher la configuration SMS utilisée
+  const smsUrl = await iexec.config.resolveSmsURL();
+  console.log(`     SMS URL: ${smsUrl}`);
   
   const pushed = await iexec.dataset.pushDatasetSecret(datasetAddress, encryptionKey);
   
@@ -160,7 +216,23 @@ async function deployComplete(deploymentNumber) {
       walletInfo.privateKey
     );
     
-    const iexec = new IExec({ ethProvider });
+    const iexec = new IExec(
+      { ethProvider },
+      {
+        smsURL: CHAIN_CONFIG.sms,
+        iexecGatewayURL: CHAIN_CONFIG.iexecGateway,
+        ipfsGatewayURL: CHAIN_CONFIG.ipfsGateway,
+        resultProxyURL: CHAIN_CONFIG.resultProxy
+      }
+    );
+    
+    // Vérifier la configuration
+    console.log(`  📋 Configuration iExec:`);
+    console.log(`     Chain ID: ${CHAIN_CONFIG.chainId}`);
+    console.log(`     Host: ${CHAIN_CONFIG.host}`);
+    console.log(`     SMS: ${CHAIN_CONFIG.sms}`);
+    console.log(`     Gateway: ${CHAIN_CONFIG.iexecGateway}`);
+    console.log(`     IPFS: ${CHAIN_CONFIG.ipfsGateway}`);
     
     // 3. Déployer l'application
     console.log(`\n2️⃣  Déploiement de l'application...`);
